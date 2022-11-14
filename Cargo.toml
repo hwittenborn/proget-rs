@@ -1,6 +1,6 @@
 [package]
 name = "proget-sdk"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Hunter Wittenborn <hunter@hunterwittenborn.com>"]
 description = "An unofficial Rust SDK for ProGet"
 edition = "2021"

@@ -12,8 +12,7 @@ local UnitTests() = {
 	    "sudo apt install rustup libssl-dev pkg-config -y",
 	    "rustup install stable",
 	    "cargo fmt --check",
-	    "cargo clippy -- -D warnings",
-	    "cargo test"
+	    "cargo clippy -- -D warnings"
 	]
     }]
 };
@@ -35,7 +34,7 @@ local DeployCratesIO() = {
 	    ".drone/scripts/setup-pbmpr.sh",
 	    "sudo apt install rustup libssl-dev pkg-config -y",
 	    "rustup install stable",
-	    "cargo publish",
+	    "cargo publish"
 	]
     }]
 };
