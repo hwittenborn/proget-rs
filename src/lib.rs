@@ -1,4 +1,6 @@
-///! An unofficial Rust SDK for [Proget](https://inedo.com/proget).
+//! An unofficial Rust SDK for [Proget](https://inedo.com/proget).
+//!
+//! Most use cases will involve beginning with a [`Client`]. Please start there if you're trying to find your way around the library.
 pub use reqwest;
 use std::fmt;
 pub use url;
