@@ -6,6 +6,12 @@ use std::fmt;
 pub use url;
 use url::Url;
 
+/// An enum representing both [`reqwest::Error`] as well as [`reqwuest::Response`] types that don't return an HTTP code between 200-299.
+pub enum HttpError {
+    Error(reqwest::Error),
+    BadStatusCode(reqwest::Response)
+}
+
 /// Errors that can happen in [`ClientBuilder`].
 #[derive(Debug)]
 pub enum ClientBuilderError {
@@ -86,7 +92,12 @@ impl Client {
             ))
             .default_headers({
                 let mut headers = reqwest::header::HeaderMap::new();
-                headers.insert("X-ApiKey", api_token.to_string().parse().unwrap());
+                let header_value = format!(
+                    "Basic {}",
+                    base64::encode("api:".to_owned() + &api_token.to_string())
+                );
+                println!("=={}==", header_value);
+                headers.insert("Authorization", header_value.parse().unwrap());
                 headers
             })
             .build()
@@ -116,7 +127,7 @@ impl Client {
         component_name: T,
         deb_name: T,
         deb_data: &[u8],
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<(), HttpError> {
         let url = format!(
             "{}/debian-packages/upload/{}/{}/{}",
             self.server_url,
@@ -124,11 +135,16 @@ impl Client {
             component_name.to_string(),
             deb_name.to_string()
         );
-        self.http
-            .post(url)
-            .body(deb_data.to_vec())
-            .send()
-            .await
-            .map(|_| ())
+        
+        match self.http.post(url).body(deb_data.to_vec()).send().await {
+            Ok(resp) => {
+                if !resp.status().is_success() {
+                    Err(HttpError::BadStatusCode(resp))
+                } else {
+                    Ok(())
+                }
+            },
+            Err(err) => Err(HttpError::Error(err))
+        }
     }
 }
