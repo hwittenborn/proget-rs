@@ -1,79 +1,19 @@
-//! An unofficial Rust SDK for [Proget](https://inedo.com/proget).
+//! A library providing a client for the [ProGet](https://inedo.com/proget) API.
 //!
-//! Most use cases will involve beginning with a [`Client`]. Please start there if you're trying to find your way around the library.
+//! This library is **heavily** a work in progress, and stability is currently **not guaranteed**.
+//! The library also needs a plethora of features to be added still - if there's something you'd
+//! like added that's missing, feel free to make an issue or send in a PR on the
+//! [GitHub repository](https://github.com/hwittenborn/proget-rust-sdk).
+//!
+//! Most use cases will involve beginning with a [`Client`]. Please start there
+//! if you're trying to find your way around the library.
+mod deb;
+
 pub use reqwest;
-use std::fmt;
-pub use url;
-use url::Url;
+use reqwest::header::HeaderMap;
 
-/// An enum representing both [`reqwest::Error`] as well as [`reqwuest::Response`] types that don't return an HTTP code between 200-299.
-pub enum HttpError {
-    Error(reqwest::Error),
-    BadStatusCode(reqwest::Response)
-}
-
-/// Errors that can happen in [`ClientBuilder`].
-#[derive(Debug)]
-pub enum ClientBuilderError {
-    MissingServerUrl,
-    MissingServerToken,
-    InvalidServerUrl(url::ParseError),
-}
-
-impl fmt::Display for ClientBuilderError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let err = match self {
-            Self::MissingServerUrl => "missing server url".to_string(),
-            Self::MissingServerToken => "missing server token".to_string(),
-            Self::InvalidServerUrl(err) => err.to_string(),
-        };
-        write!(f, "{}", err)
-    }
-}
-
-/// Builder to create and manage various aspects of a [`Client`].
-pub struct ClientBuilder {
-    server_url: Option<String>,
-    api_token: Option<String>,
-}
-
-impl ClientBuilder {
-    /// Create a new builder object.
-    fn new() -> Self {
-        Self {
-            server_url: None,
-            api_token: None,
-        }
-    }
-
-    /// Set the server URL.
-    pub fn server<T: ToString>(mut self, url: T) -> Self {
-        self.server_url = Some(url.to_string());
-        self
-    }
-
-    /// Set the API token used in requests.
-    pub fn token<T: ToString>(mut self, token: T) -> Self {
-        self.api_token = Some(token.to_string());
-        self
-    }
-
-    /// Create a [`Client`] with the options set on this builder.
-    pub fn build(self) -> Result<Client, ClientBuilderError> {
-        if self.server_url.is_none() {
-            Err(ClientBuilderError::MissingServerUrl)
-        } else if self.api_token.is_none() {
-            Err(ClientBuilderError::MissingServerToken)
-        } else if let Err(err) = Url::parse(self.server_url.as_ref().unwrap()) {
-            Err(ClientBuilderError::InvalidServerUrl(err))
-        } else {
-            Ok(Client::new(
-                self.server_url.unwrap(),
-                self.api_token.unwrap(),
-            ))
-        }
-    }
-}
+/// The user agent we use in requests.
+static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 /// A struct representing a user of a ProGet instance.
 pub struct Client {
@@ -83,35 +23,22 @@ pub struct Client {
 
 impl Client {
     /// Create a new client.
-    fn new<T: ToString>(server_url: T, api_token: T) -> Self {
+    pub fn new(server_url: &str, api_token: &str) -> Self {
+        let mut headers = HeaderMap::new();
+        let auth_key = base64::encode(format!("api:{api_token}"));
+        let auth_header = format!("Basic {auth_key}");
+        headers.insert("Authorization", auth_header.parse().unwrap());
+
         let http_client = reqwest::Client::builder()
-            .user_agent(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            ))
-            .default_headers({
-                let mut headers = reqwest::header::HeaderMap::new();
-                let header_value = format!(
-                    "Basic {}",
-                    base64::encode("api:".to_owned() + &api_token.to_string())
-                );
-                println!("=={}==", header_value);
-                headers.insert("Authorization", header_value.parse().unwrap());
-                headers
-            })
+            .user_agent(USER_AGENT)
+            .default_headers(headers)
             .build()
             .unwrap();
 
         Self {
             http: http_client,
-            server_url: server_url.to_string(),
+            server_url: server_url.to_owned(),
         }
-    }
-
-    /// Create a new [`ClientBuilder`] to configure a client.
-    pub fn builder() -> ClientBuilder {
-        ClientBuilder::new()
     }
 
     /// Upload a `.deb` package.
@@ -121,30 +48,16 @@ impl Client {
     /// * `component_name`: The component in the APT repository to upload the deb to. For example, this would be `component` in `deb https://proget.example.com deb-packages component`.
     /// * `deb_name`: The name of the `.deb` file to register the package under (i.e. `pkg_1.0.0-1_amd64.deb`).
     /// * `deb_data`: The binary data of the `.deb` file.
-    pub async fn upload_deb<T: ToString>(
+    ///
+    /// # Errors
+    /// This function returns an error if there was an issue uploading the file.
+    pub async fn upload_deb(
         &self,
-        feed_name: T,
-        component_name: T,
-        deb_name: T,
+        feed_name: &str,
+        component_name: &str,
+        deb_name: &str,
         deb_data: &[u8],
-    ) -> Result<(), HttpError> {
-        let url = format!(
-            "{}/debian-packages/upload/{}/{}/{}",
-            self.server_url,
-            feed_name.to_string(),
-            component_name.to_string(),
-            deb_name.to_string()
-        );
-        
-        match self.http.post(url).body(deb_data.to_vec()).send().await {
-            Ok(resp) => {
-                if !resp.status().is_success() {
-                    Err(HttpError::BadStatusCode(resp))
-                } else {
-                    Ok(())
-                }
-            },
-            Err(err) => Err(HttpError::Error(err))
-        }
+    ) -> Result<(), reqwest::Error> {
+        deb::upload_deb(self, feed_name, component_name, deb_name, deb_data).await
     }
 }

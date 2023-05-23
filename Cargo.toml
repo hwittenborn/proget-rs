@@ -1,18 +1,14 @@
 [package]
-name = "proget-sdk"
-version = "0.1.3"
+name = "proget"
+version = "0.1.0"
 authors = ["Hunter Wittenborn <hunter@hunterwittenborn.com>"]
-description = "An unofficial Rust SDK for ProGet"
+description = "A client for the ProGet API"
 edition = "2021"
 repository = "https://github.com/hwittenborn/proget-rust-sdk"
 license = "GPL-3.0-only WITH GPL-3.0-linking-exception"
 keywords = ["proget"]
 categories = ["api-bindings"]
 
-[lib]
-name = "proget_sdk"
-
 [dependencies]
 base64 = "0.13.1"
-url = "2.3.1"
 reqwest = "0.11.12"
