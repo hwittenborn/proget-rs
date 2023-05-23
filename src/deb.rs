@@ -8,7 +8,7 @@ pub(crate) async fn upload_deb(
     deb_data: &[u8],
 ) -> Result<(), reqwest::Error> {
     let url = format!(
-        "{}/debian-packages/upload/{}/{}/{}",
+        "{}debian-packages/upload/{}/{}/{}",
         client.server_url, feed_name, component_name, deb_name
     );
 
