@@ -10,7 +10,7 @@
 mod deb;
 
 pub use reqwest;
-use reqwest::header::HeaderMap;
+use reqwest::{header::HeaderMap, Url};
 
 /// The user agent we use in requests.
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -18,12 +18,12 @@ static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_V
 /// A struct representing a user of a ProGet instance.
 pub struct Client {
     http: reqwest::Client,
-    server_url: String,
+    server_url: Url,
 }
 
 impl Client {
     /// Create a new client.
-    pub fn new(server_url: &str, api_token: &str) -> Self {
+    pub fn new<U: Into<Url>>(server_url: U, api_token: &str) -> Self {
         let mut headers = HeaderMap::new();
         let auth_key = base64::encode(format!("api:{api_token}"));
         let auth_header = format!("Basic {auth_key}");
@@ -37,7 +37,7 @@ impl Client {
 
         Self {
             http: http_client,
-            server_url: server_url.to_owned(),
+            server_url: server_url.into(),
         }
     }
 
