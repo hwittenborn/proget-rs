@@ -23,7 +23,7 @@ pub struct Client {
 
 impl Client {
     /// Create a new client.
-    pub fn new<U: Into<Url>>(server_url: U, api_token: &str) -> Self {
+    pub fn new(server_url: Url, api_token: &str) -> Self {
         let mut headers = HeaderMap::new();
         let auth_key = base64::encode(format!("api:{api_token}"));
         let auth_header = format!("Basic {auth_key}");
@@ -37,7 +37,7 @@ impl Client {
 
         Self {
             http: http_client,
-            server_url: server_url.into(),
+            server_url,
         }
     }
 
