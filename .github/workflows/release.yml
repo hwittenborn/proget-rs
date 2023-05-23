@@ -19,15 +19,6 @@ jobs:
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
             kv/data/ci crates_api_key | CARGO_REGISTRY_TOKEN
-      - name: Setup Prebuilt-MPR APT repository
-        uses: makedeb/setup-makedeb@main
-        with:
-          makedeb-repo: false
-          pbmpr-repo: true
-      - name: Install Rust toolchain
-        run: sudo apt-get install rustup -y
-      - name: Setup default Rust toolchain
-        run: rustup default stable
       - name: Restore Rust cache
         uses: Swatinem/rust-cache@v2
       - name: Release to crates.io

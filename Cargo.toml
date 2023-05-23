@@ -1,6 +1,6 @@
 [package]
 name = "proget"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Hunter Wittenborn <hunter@hunterwittenborn.com>"]
 description = "A client for the ProGet API"
 edition = "2021"
