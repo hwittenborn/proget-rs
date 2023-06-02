@@ -176,6 +176,9 @@ impl Client<Auth> {
     }
 }
 
+/// Automatic conversion of an [`Auth`] client into an [`Anon`] client, which allows
+/// anonymous-access functions like [`Client::health`] to be accessed from the authenticated
+/// client.
 impl Deref for Client<Auth> {
     type Target = Client<Anon>;
 
