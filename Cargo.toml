@@ -1,6 +1,6 @@
 [package]
 name = "proget"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Hunter Wittenborn <hunter@hunterwittenborn.com>"]
 description = "A client for the ProGet API"
 edition = "2021"
@@ -19,4 +19,4 @@ thiserror = "1.0.40"
 
 [features]
 default = ["reqwest/default"]
-rustls = ["reqwest/rustls"]
+rustls-tls = ["reqwest/rustls-tls"]
