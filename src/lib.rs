@@ -7,11 +7,22 @@
 //!
 //! Most use cases will involve beginning with a [`Client`]. Please start there
 //! if you're trying to find your way around the library.
+//!
+//! # Feature flags
+//! - `rustls-tls`: Use `rustls` as the TLS backend. Uses the system's native backend when not
+//!   enabled.
+//! - `indexmap`: Use [`IndexMap`] instead of [`HashMap`] for items in
+//!   [`models`].
 mod api;
 pub mod models;
 
 pub use reqwest;
 pub use semver;
+
+#[cfg(feature = "__docs")]
+use indexmap::IndexMap;
+#[cfg(feature = "__docs")]
+use std::collections::HashMap;
 
 use reqwest::{header::HeaderMap, Url};
 use std::{marker::PhantomData, ops::Deref};

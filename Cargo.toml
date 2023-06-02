@@ -1,6 +1,6 @@
 [package]
 name = "proget"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Hunter Wittenborn <hunter@hunterwittenborn.com>"]
 description = "A client for the ProGet API"
 edition = "2021"
@@ -9,8 +9,13 @@ license = "GPL-3.0-only WITH GPL-3.0-linking-exception"
 keywords = ["proget"]
 categories = ["api-bindings"]
 
+[package.metadata.docs.rs]
+features = ["__docs"]
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 base64 = "0.13.1"
+indexmap = { version = "1.9.3", features = ["serde"], optional = true }
 reqwest = { version = "0.11.12", default-features = false }
 semver = { version = "1.0.17", features = ["serde"] }
 serde = { version = "1.0.163", features = ["derive"] }
@@ -19,4 +24,8 @@ thiserror = "1.0.40"
 
 [features]
 default = ["reqwest/default"]
+indexmap = ["dep:indexmap"]
 rustls-tls = ["reqwest/rustls-tls"]
+
+# Internal (PRIVATE) features, don't rely on these in the public crate!
+__docs = ["dep:indexmap"]
